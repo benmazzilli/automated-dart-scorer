@@ -62,7 +62,7 @@ This will:
 1. Load test images from `app/images/`
 2. Detect the dartboard in each image
 3. Identify all segments and scoring rings
-4. Create visualizations with segment labels
+4. Create visualisations with segment labels
 5. Test scoring at sample dart positions
 6. Save annotated images as `*_segments.jpg`
 
@@ -89,7 +89,7 @@ if dartboard_info:
     segment_info = detector.detect_segments(image, dartboard_info)
     segment_info.update(dartboard_info)
     
-    # Create visualization
+    # Create visualisation
     result = detector.visualise_segments(image, segment_info, 'output.jpg')
     
     # Score a dart at specific coordinates
@@ -245,7 +245,7 @@ This project is under active development on the `feature/computer-vision-scoring
 - The dartboard should be roughly circular in the image
 
 **Incorrect segment boundaries:**
-- Check that the centre detection is accurate (visualize output)
+- Check that the centre detection is accurate (visualise output)
 - Ensure wire detection is working (check debug logs)
 - May need to adjust rotation detection parameters for non-standard boards
 
