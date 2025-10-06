@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Dart Scorer - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+        
+        .upload-box:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+        }
+        
+        .upload-box.dragover {
+            background: #e5e9ff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            margin: 30px auto;
+            text-align: center;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .total-score {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .dart-list {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .dart-item {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .dart-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dart-info {
+            flex: 1;
+        }
+        
+        .dart-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .dart-score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #764ba2;
+        }
+        
+        .image-preview {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .error {
+            background: #ff4757;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Automated Dart Scorer</h1>
+            <p class="subtitle">Upload a dartboard image and get instant AI-powered scoring</p>
+        </header>
+        
+        <main>
+            <div class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <h2>📷 Drop an image here or click to upload</h2>
+                    <p style="margin-top: 20px; opacity: 0.7;">Supports JPG, PNG</p>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                <button class="btn" id="uploadBtn" style="display: none;">Score This Image</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analysing dartboard and detecting darts...</p>
+            </div>
+            
+            <div class="error" id="error"></div>
+            
+            <div class="results" id="results">
+                <div class="score-card">
+                    <h2>Total Score</h2>
+                    <div class="total-score" id="totalScore">0</div>
+                    <p id="dartCount">0 darts detected</p>
+                </div>
+                
+                <h3 style="margin-bottom: 20px;">Individual Dart Scores</h3>
+                <div class="dart-list" id="dartList"></div>
+                
+                <div class="image-preview">
+                    <h3 style="margin-bottom: 20px;">Annotated Result</h3>
+                    <img id="resultImage" src="" alt="Result">
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Automatically detect the API URL based on current location
+        const API_URL = window.location.origin;
+        
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        
+        let selectedFile = null;
+        
+        // Click to upload
+        uploadBox.addEventListener('click', () => fileInput.click());
+        
+        // Drag and drop
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+        
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+        
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                showUploadButton();
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                showUploadButton();
+            }
+        });
+        
+        function showUploadButton() {
+            uploadBox.innerHTML = `
+                <h2>✅ ${selectedFile.name}</h2>
+                <p style="margin-top: 20px;">Ready to score!</p>
+            `;
+            uploadBtn.style.display = 'inline-block';
+        }
+        
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            // Hide previous results and errors
+            results.classList.remove('active');
+            error.classList.remove('active');
+            loading.classList.add('active');
+            uploadBtn.disabled = true;
+            
+            try {
+                // Score the image (JSON)
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                const scoreResponse = await fetch(`${API_URL}/score`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!scoreResponse.ok) {
+                    throw new Error('Failed to score image');
+                }
+                
+                const scoreData = await scoreResponse.json();
+                
+                // Get visualization
+                const formData2 = new FormData();
+                formData2.append('file', selectedFile);
+                
+                const imageResponse = await fetch(`${API_URL}/score-with-image`, {
+                    method: 'POST',
+                    body: formData2
+                });
+                
+                if (!imageResponse.ok) {
+                    throw new Error('Failed to get visualisation');
+                }
+                
+                const imageBlob = await imageResponse.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+                
+                // Display results
+                displayResults(scoreData, imageUrl);
+                
+            } catch (err) {
+                showError(`Error: ${err.message}. Make sure the API server is running at ${API_URL}`);
+            } finally {
+                loading.classList.remove('active');
+                uploadBtn.disabled = false;
+            }
+        });
+        
+        function displayResults(data, imageUrl) {
+            document.getElementById('totalScore').textContent = data.total_score;
+            document.getElementById('dartCount').textContent = `${data.darts.length} dart${data.darts.length !== 1 ? 's' : ''} detected`;
+            
+            const dartList = document.getElementById('dartList');
+            dartList.innerHTML = '';
+            
+            data.darts.forEach(dart => {
+                const dartItem = document.createElement('div');
+                dartItem.className = 'dart-item';
+                dartItem.innerHTML = `
+                    <div class="dart-info">
+                        <span class="dart-number">Dart #${dart.dart_id}</span>
+                        <p style="margin-top: 5px; opacity: 0.7;">
+                            ${dart.score} × ${dart.multiplier} (${dart.region})
+                            <br>
+                            Confidence: ${(dart.confidence * 100).toFixed(1)}%
+                        </p>
+                    </div>
+                    <div class="dart-score">${dart.total}</div>
+                `;
+                dartList.appendChild(dartItem);
+            });
+            
+            document.getElementById('resultImage').src = imageUrl;
+            results.classList.add('active');
+        }
+        
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('active');
+            setTimeout(() => error.classList.remove('active'), 5000);
+        }
+    </script>
+</body>
+</html>
+

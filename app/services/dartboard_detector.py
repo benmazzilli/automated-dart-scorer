@@ -33,17 +33,18 @@ class DartboardDetector:
     
     # Ring ratios (relative to dartboard radius - the outer double ring)
     # Standard dartboard dimensions:
-    # - Playing diameter: 451mm (outer edge of double ring)
-    # - Double ring: outer edge to 162mm from centre = 324mm diameter
-    # - Triple ring: 214mm diameter outer to 198mm diameter inner
-    # - Outer bull: 31.8mm diameter
-    # - Inner bull: 12.7mm diameter
-    RATIO_OUTER_DOUBLE = 1.00  # This IS the outer radius
-    RATIO_INNER_DOUBLE = 0.72  # 162mm / 225.5mm
-    RATIO_OUTER_TRIPLE = 0.475  # 107mm / 225.5mm
-    RATIO_INNER_TRIPLE = 0.44   # 99mm / 225.5mm
-    RATIO_OUTER_BULL = 0.071    # 15.9mm / 225.5mm
-    RATIO_INNER_BULL = 0.028    # 6.35mm / 225.5mm
+    # - Outer double ring: 170mm radius (reference = 1.00)
+    # - Inner double ring: 162mm radius
+    # - Outer triple ring: 107mm radius
+    # - Inner triple ring: 99mm radius
+    # - Outer bull: 15.9mm radius
+    # - Inner bull: 6.35mm radius
+    RATIO_OUTER_DOUBLE = 1.00   # 170mm / 170mm - This IS the outer radius
+    RATIO_INNER_DOUBLE = 0.953  # 162mm / 170mm
+    RATIO_OUTER_TRIPLE = 0.629  # 107mm / 170mm
+    RATIO_INNER_TRIPLE = 0.582  # 99mm / 170mm
+    RATIO_OUTER_BULL = 0.094    # 15.9mm / 170mm
+    RATIO_INNER_BULL = 0.037    # 6.35mm / 170mm
     
     def __init__(self, debug=True):
         """Initialise the detector."""
@@ -126,8 +127,8 @@ class DartboardDetector:
                 self.logger.info("Refined centre using bullseye detection")
             
             # The orange surround is larger than the actual dartboard
-            # Dartboard playing surface is approximately 62% of surround radius
-            dartboard_radius = int(outer_radius * 0.62)
+            # Dartboard playing surface is approximately 49% of surround radius
+            dartboard_radius = int(outer_radius * 0.49)
             
             return {
                 'centre': (cx, cy),
