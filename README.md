@@ -55,7 +55,7 @@ uv sync
 Test the dartboard detector with the provided test images:
 
 ```bash
-python test_dartboard_detector.py
+uv run python app/test_dartboard_detector.py
 ```
 
 This will:
@@ -72,7 +72,7 @@ This will:
 from app.services.dartboard_detector import DartboardDetector
 import cv2
 
-# Initialize detector
+# Initialise detector
 detector = DartboardDetector(debug=True)
 
 # Load image
