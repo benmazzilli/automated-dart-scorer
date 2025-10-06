@@ -201,8 +201,11 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
+# Project specific
+*.log
+app/images/*_segments.jpg
+app/images/*_darts_detected.jpg
+app/images/*_scored.jpg
 
+# Keep original test images
+!app/images/test*.jpg

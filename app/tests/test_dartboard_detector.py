@@ -7,7 +7,7 @@ This script tests the dartboard detector on multiple test images.
 import cv2
 import sys
 import os
-from services.dartboard_detector import DartboardDetector
+from app.services.dartboard_detector import DartboardDetector
 
 
 def test_image(detector, image_path, test_name):
