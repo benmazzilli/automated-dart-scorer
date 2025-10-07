@@ -13,6 +13,7 @@ from typing import Dict, List
 import io
 import logging
 from pathlib import Path
+from fastapi.staticfiles import StaticFiles
 
 from app.services.dart_scorer import DartScorer
 
@@ -205,6 +206,51 @@ async def health_check():
             "scorer": "operational"
         }
     }
+
+
+@app.get("/mobile")
+async def mobile_app():
+    """Serve the mobile PWA."""
+    mobile_path = Path(__file__).parent.parent / "mobile-app.html"
+    if mobile_path.exists():
+        return FileResponse(mobile_path)
+    raise HTTPException(status_code=404, detail="Mobile app not found")
+
+
+@app.get("/manifest.json")
+async def manifest():
+    """Serve PWA manifest."""
+    manifest_path = Path(__file__).parent.parent / "manifest.json"
+    if manifest_path.exists():
+        return FileResponse(manifest_path, media_type="application/json")
+    raise HTTPException(status_code=404, detail="Manifest not found")
+
+
+@app.get("/service-worker.js")
+async def service_worker():
+    """Serve service worker."""
+    sw_path = Path(__file__).parent.parent / "service-worker.js"
+    if sw_path.exists():
+        return FileResponse(sw_path, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="Service worker not found")
+
+
+@app.get("/icon-192.png")
+async def icon_192():
+    """Serve 192x192 icon."""
+    icon_path = Path(__file__).parent.parent / "icon-192.png"
+    if icon_path.exists():
+        return FileResponse(icon_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Icon not found")
+
+
+@app.get("/icon-512.png")
+async def icon_512():
+    """Serve 512x512 icon."""
+    icon_path = Path(__file__).parent.parent / "icon-512.png"
+    if icon_path.exists():
+        return FileResponse(icon_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Icon not found")
 
 
 if __name__ == "__main__":
