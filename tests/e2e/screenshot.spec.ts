@@ -25,7 +25,10 @@ test('capture screens', async ({ page }) => {
   await page.getByRole('button', { name: 'Board', exact: true }).click()
   await page.screenshot({ path: 'test-results/shots/4-play-board.png', fullPage: true })
 
-  // A third treble makes it a 180 and fires the meme overlay.
+  // A third treble makes it a 180 and fires the meme overlay. The entry
+  // selector cycles keypad -> board -> camera, so getting back to the keypad
+  // from the board takes two steps.
+  await page.getByRole('button', { name: 'Camera', exact: true }).click()
   await page.getByRole('button', { name: 'Keypad', exact: true }).click()
   await page.getByRole('button', { name: 'Treble', exact: true }).click()
   await page.getByRole('button', { name: '20', exact: true }).click()

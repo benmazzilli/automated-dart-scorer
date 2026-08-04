@@ -7,8 +7,22 @@ import { defineConfig, devices } from '@playwright/test'
  */
 const executablePath = process.env['CHROMIUM_PATH'] ?? '/opt/pw-browsers/chromium'
 
+import { FAKE_VIDEO_PATH } from './tests/e2e/fake-video'
+
+/**
+ * Chromium can take a Y4M file in place of a camera, which lets the camera
+ * scoring path be driven end to end — real getUserMedia, real frame loop, real
+ * detection — without a board or a phone.
+ */
+const FAKE_CAMERA_ARGS = [
+  '--use-fake-device-for-media-stream',
+  '--use-fake-ui-for-media-stream',
+  `--use-file-for-fake-video-capture=${FAKE_VIDEO_PATH}`,
+]
+
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
@@ -20,12 +34,26 @@ export default defineConfig({
   projects: [
     {
       name: 'mobile-safari-sized',
+      // The camera suite needs the fake-device flags, so it runs in its own
+      // project rather than here.
+      testIgnore: /camera.*\.spec\.ts/,
       use: {
         ...devices['iPhone 13'],
         // iPhone 13 defaults to WebKit; run the engine we actually have.
         browserName: 'chromium',
         defaultBrowserType: 'chromium',
         launchOptions: { executablePath },
+      },
+    },
+    {
+      name: 'fake-camera',
+      testMatch: /camera.*\.spec\.ts/,
+      use: {
+        ...devices['iPhone 13'],
+        browserName: 'chromium',
+        defaultBrowserType: 'chromium',
+        permissions: ['camera'],
+        launchOptions: { executablePath, args: FAKE_CAMERA_ARGS },
       },
     },
   ],

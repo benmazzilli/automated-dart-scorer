@@ -3,10 +3,25 @@ import { describeScore, type BoardScore } from '../../game/board'
 import { currentPlayer } from '../../game/engine'
 import { DARTS_PER_TURN } from '../../game/types'
 import { useMatch } from '../../store/match'
+import type { Point } from '../../vision/homography'
+import { CameraScorer } from '../components/CameraScorer'
 import { Dartboard } from '../components/Dartboard'
 import { Keypad } from '../components/Keypad'
 
-type EntryMode = 'board' | 'keypad'
+type EntryMode = 'board' | 'keypad' | 'camera'
+
+const ENTRY_LABEL: Record<EntryMode, string> = {
+  keypad: 'Keypad',
+  board: 'Board',
+  camera: 'Camera',
+}
+
+/** Cycles keypad → board → camera → keypad. */
+const NEXT_ENTRY: Record<EntryMode, EntryMode> = {
+  keypad: 'board',
+  board: 'camera',
+  camera: 'keypad',
+}
 
 export function PlayScreen() {
   const mode = useMatch((s) => s.mode)
@@ -19,6 +34,7 @@ export function PlayScreen() {
   const nameOf = useMatch((s) => s.nameOf)
 
   const [entry, setEntry] = useState<EntryMode>('keypad')
+  const [correcting, setCorrecting] = useState(false)
 
   if (!mode || !state) return null
 
@@ -33,6 +49,24 @@ export function PlayScreen() {
 
   function handlePick(score: BoardScore, position?: { xMm: number; yMm: number }) {
     throwDart(position ? { score, position } : { score })
+    // A correction always returns to the board, so leaving it open would hide
+    // the camera for the rest of the turn.
+    if (correcting) setCorrecting(false)
+  }
+
+  function handleCameraScore(
+    score: BoardScore,
+    position: Point,
+    confidence: number,
+    corrected: boolean,
+  ) {
+    throwDart({
+      score,
+      position: { xMm: position.x, yMm: position.y },
+      source: 'camera',
+      confidence,
+      ...(corrected ? { corrected: true } : {}),
+    })
   }
 
   return (
@@ -107,7 +141,27 @@ export function PlayScreen() {
         })}
       </div>
 
-      {entry === 'board' ? (
+      {correcting ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-center text-sm text-neutral-400">
+            Tap where the dart actually landed
+          </p>
+          <Dartboard onPick={handlePick} marks={marks} className="mx-auto w-full max-w-sm" />
+          <button
+            type="button"
+            onClick={() => setCorrecting(false)}
+            className="rounded-xl bg-neutral-800 py-3 text-sm font-semibold text-neutral-200"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : entry === 'camera' ? (
+        <CameraScorer
+          onScore={handleCameraScore}
+          onCorrect={() => setCorrecting(true)}
+          disabled={dartsLeft === 0}
+        />
+      ) : entry === 'board' ? (
         <Dartboard
           onPick={handlePick}
           marks={marks}
@@ -121,10 +175,10 @@ export function PlayScreen() {
       <div className="mt-auto grid grid-cols-3 gap-2 pt-2">
         <button
           type="button"
-          onClick={() => setEntry((m) => (m === 'board' ? 'keypad' : 'board'))}
+          onClick={() => setEntry((m) => NEXT_ENTRY[m])}
           className="rounded-xl bg-neutral-800 py-3 text-sm font-semibold text-neutral-200"
         >
-          {entry === 'board' ? 'Keypad' : 'Board'}
+          {ENTRY_LABEL[NEXT_ENTRY[entry]]}
         </button>
         <button
           type="button"
