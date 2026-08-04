@@ -203,7 +203,9 @@ export const x01Mode: GameMode<X01Config, X01Data> = {
     const live = liveRemaining(state, player)
     const dartsLeft = DARTS_PER_TURN - state.currentTurn.length
     const route = describeCheckout(findCheckout(live, dartsLeft, config.doubleOut))
-    return route ? `${live} — ${route}` : `${live}`
+    // With no finish on, the scoreboard already shows the number in large
+    // type; repeating it here just adds a second copy of the same figure.
+    return route ? `${live} — ${route}` : ''
   },
 
   scoreboard(state: GameState<X01Data>): PlayerScoreboardEntry[] {
@@ -213,14 +215,15 @@ export const x01Mode: GameMode<X01Config, X01Data> = {
         playerId === currentPlayer(state) && state.status === 'playing'
           ? liveRemaining(state, playerId)
           : (state.data.remaining[playerId] ?? config.startingScore)
-      const route = describeCheckout(findCheckout(remaining, DARTS_PER_TURN, config.doubleOut))
       const legs = state.data.legsWon[playerId] ?? 0
       const sets = state.data.setsWon[playerId] ?? 0
+      // The checkout route belongs on the target line, not here — showing it
+      // in both places puts the same suggestion on screen twice.
       const tally = config.setsToWin > 1 ? `${sets} sets · ${legs} legs` : `${legs} legs`
       return {
         playerId,
         primary: String(remaining),
-        secondary: route ?? tally,
+        secondary: tally,
         eliminated: false,
       }
     })
