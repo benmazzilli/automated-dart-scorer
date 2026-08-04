@@ -27,3 +27,107 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
     env(safe-area-inset-left);
 }
+
+/* ---- Meme effects ---------------------------------------------------- */
+
+@keyframes meme-slam {
+  0% {
+    transform: scale(2.6) rotate(-6deg);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(1) rotate(-2deg);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes meme-shake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  10%,
+  30%,
+  50%,
+  70% {
+    transform: translateX(-14px) rotate(-3deg);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(14px) rotate(3deg);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes meme-flash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.meme-slam {
+  animation: meme-slam 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.meme-shake {
+  animation: meme-shake 1.4s ease-in-out forwards;
+}
+
+.meme-flash {
+  animation: meme-flash 1.2s ease-out forwards;
+}
+
+@keyframes meme-scrim {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.meme-scrim {
+  animation: meme-scrim 2s ease-out forwards;
+}
+
+/* Respect the system setting — flashing and shaking are exactly what this
+   preference exists to suppress. */
+@media (prefers-reduced-motion: reduce) {
+  .meme-slam,
+  .meme-shake,
+  .meme-flash {
+    animation: none;
+    opacity: 1;
+  }
+  .meme-flash {
+    opacity: 0.2;
+  }
+}

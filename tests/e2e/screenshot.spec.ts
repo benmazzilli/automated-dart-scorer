@@ -24,4 +24,12 @@ test('capture screens', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Board', exact: true }).click()
   await page.screenshot({ path: 'test-results/shots/4-play-board.png', fullPage: true })
+
+  // A third treble makes it a 180 and fires the meme overlay.
+  await page.getByRole('button', { name: 'Keypad', exact: true }).click()
+  await page.getByRole('button', { name: 'Treble', exact: true }).click()
+  await page.getByRole('button', { name: '20', exact: true }).click()
+  await expect(page.getByTestId('meme-one-eighty')).toBeVisible()
+  await page.waitForTimeout(400)
+  await page.screenshot({ path: 'test-results/shots/5-meme-180.png' })
 })

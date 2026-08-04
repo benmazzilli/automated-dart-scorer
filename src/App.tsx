@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MemeOverlay } from './memes/MemeOverlay'
 import { useMatch } from './store/match'
 import { PlayScreen } from './ui/screens/PlayScreen'
 import { ResultScreen } from './ui/screens/ResultScreen'
@@ -9,9 +10,16 @@ export function App() {
   const state = useMatch((s) => s.state)
   const [showStats, setShowStats] = useState(false)
 
-  if (state) {
-    return state.status === 'finished' ? <ResultScreen /> : <PlayScreen />
+  return (
+    <>
+      {screen()}
+      <MemeOverlay />
+    </>
+  )
+
+  function screen() {
+    if (state) return state.status === 'finished' ? <ResultScreen /> : <PlayScreen />
+    if (showStats) return <StatsScreen onBack={() => setShowStats(false)} />
+    return <SetupScreen onShowStats={() => setShowStats(true)} />
   }
-  if (showStats) return <StatsScreen onBack={() => setShowStats(false)} />
-  return <SetupScreen onShowStats={() => setShowStats(true)} />
 }
