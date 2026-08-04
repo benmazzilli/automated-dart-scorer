@@ -230,9 +230,17 @@ describe('target and scoreboard', () => {
     expect(x01Mode.describeTarget(state)).toBe('40 — D20')
   })
 
-  it('shows the bare score when no checkout exists', () => {
+  it('says nothing when no checkout is on', () => {
+    // The scoreboard already shows the remaining score in large type, so
+    // repeating it on the target line would put the same figure on screen
+    // twice. An empty target hides the line entirely.
     const state = start({ startingScore: 501 })
-    expect(x01Mode.describeTarget(state)).toBe('501')
+    expect(x01Mode.describeTarget(state)).toBe('')
+  })
+
+  it('keeps the checkout route off the scoreboard', () => {
+    const state = start({ startingScore: 40 })
+    expect(x01Mode.scoreboard(state)[0]?.secondary).toBe('0 legs')
   })
 
   it('narrows the suggestion as darts are used', () => {
