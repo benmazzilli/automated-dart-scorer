@@ -7,6 +7,7 @@ import type { Point } from '../../vision/homography'
 import { CameraScorer } from '../components/CameraScorer'
 import { Dartboard } from '../components/Dartboard'
 import { Keypad } from '../components/Keypad'
+import { useWakeLock } from '../useWakeLock'
 
 type EntryMode = 'board' | 'keypad' | 'camera'
 
@@ -35,6 +36,10 @@ export function PlayScreen() {
 
   const [entry, setEntry] = useState<EntryMode>('keypad')
   const [correcting, setCorrecting] = useState(false)
+
+  // A phone on a stand gets no touches for minutes, so it would otherwise
+  // sleep mid-leg and take the camera with it.
+  useWakeLock(true)
 
   if (!mode || !state) return null
 

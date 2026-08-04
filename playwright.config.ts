@@ -1,11 +1,14 @@
+import { existsSync } from 'node:fs'
 import { defineConfig, devices } from '@playwright/test'
 
 /**
- * The container ships Chromium at a fixed path with
+ * The development container ships Chromium at a fixed path with
  * PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD set, so tests use that rather than
- * downloading a browser.
+ * downloading a browser. On CI the path does not exist and Playwright's own
+ * managed browser is used instead.
  */
-const executablePath = process.env['CHROMIUM_PATH'] ?? '/opt/pw-browsers/chromium'
+const containerChromium = process.env['CHROMIUM_PATH'] ?? '/opt/pw-browsers/chromium'
+const executablePath = existsSync(containerChromium) ? containerChromium : undefined
 
 import { FAKE_VIDEO_PATH } from './tests/e2e/fake-video'
 
@@ -42,7 +45,7 @@ export default defineConfig({
         // iPhone 13 defaults to WebKit; run the engine we actually have.
         browserName: 'chromium',
         defaultBrowserType: 'chromium',
-        launchOptions: { executablePath },
+        launchOptions: executablePath ? { executablePath } : {},
       },
     },
     {
@@ -53,7 +56,9 @@ export default defineConfig({
         browserName: 'chromium',
         defaultBrowserType: 'chromium',
         permissions: ['camera'],
-        launchOptions: { executablePath, args: FAKE_CAMERA_ARGS },
+        launchOptions: executablePath
+          ? { executablePath, args: FAKE_CAMERA_ARGS }
+          : { args: FAKE_CAMERA_ARGS },
       },
     },
   ],

@@ -5,6 +5,7 @@ import { useMatch } from '../../store/match'
 import type { X01Config } from '../../game/modes/x01'
 import { createProfile, listProfiles } from '../../db/queries'
 import type { Profile } from '../../db/schema'
+import { SetupGuide } from '../components/SetupGuide'
 
 const MAX_PLAYERS = 8
 
@@ -74,6 +75,8 @@ export function SetupScreen({ onShowStats }: { onShowStats?: () => void }) {
           </button>
         )}
       </header>
+
+      <SetupGuide />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-xs font-bold uppercase tracking-widest text-neutral-500">Game</h2>
