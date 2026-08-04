@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { saveMatch } from '../db/queries'
+import type { Profile } from '../db/schema'
 import type { BoardScore } from '../game/board'
 import { getMode } from '../game/modes'
 import type { GameMode, GameState, PlayerId, Throw, ThrowSource } from '../game/types'
@@ -22,8 +24,15 @@ interface MatchStore {
   /** Previous states, oldest first. Undo pops the last one. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   past: GameState<any>[]
+  /** Profiles of everyone in the current game, for resolving names and colours. */
+  profiles: Profile[]
+  /** When the current game began, for the stored match record. */
+  startedAt: number
 
-  startGame(modeId: string, players: PlayerId[], config?: unknown): void
+  startGame(modeId: string, profiles: Profile[], config?: unknown): void
+  /** Display name for a player id. */
+  nameOf(playerId: PlayerId): string
+  colourOf(playerId: PlayerId): string
   throwDart(input: ThrowInput): void
   /** Step back one dart. */
   undo(): void
@@ -38,11 +47,30 @@ export const useMatch = create<MatchStore>((set, get) => ({
   mode: null,
   state: null,
   past: [],
+  profiles: [],
+  startedAt: 0,
 
-  startGame(modeId, players, config) {
+  startGame(modeId, profiles, config) {
     const mode = getMode(modeId)
     const resolved = config ?? mode.defaultConfig()
-    set({ mode, state: mode.createInitialState(players, resolved), past: [] })
+    set({
+      mode,
+      state: mode.createInitialState(
+        profiles.map((p) => p.id),
+        resolved,
+      ),
+      past: [],
+      profiles,
+      startedAt: Date.now(),
+    })
+  },
+
+  nameOf(playerId) {
+    return get().profiles.find((p) => p.id === playerId)?.name ?? playerId
+  },
+
+  colourOf(playerId) {
+    return get().profiles.find((p) => p.id === playerId)?.colour ?? '#fbbf24'
   },
 
   throwDart(input) {
@@ -63,6 +91,14 @@ export const useMatch = create<MatchStore>((set, get) => ({
     if (next === state) return
 
     set({ state: next, past: [...past, state].slice(-UNDO_LIMIT) })
+
+    if (next.status === 'finished') {
+      // Persist in the background. A failed write must not block the win
+      // screen — the game has been played either way.
+      void saveMatch(next, get().startedAt).catch((error: unknown) => {
+        console.error('could not save match', error)
+      })
+    }
   },
 
   undo() {
@@ -100,7 +136,7 @@ export const useMatch = create<MatchStore>((set, get) => ({
   },
 
   quit() {
-    set({ mode: null, state: null, past: [] })
+    set({ mode: null, state: null, past: [], profiles: [], startedAt: 0 })
   },
 
   canUndo() {

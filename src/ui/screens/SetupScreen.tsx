@@ -1,38 +1,78 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { GAME_MODES } from '../../game/modes'
 import { useMatch } from '../../store/match'
 import type { X01Config } from '../../game/modes/x01'
+import { createProfile, listProfiles } from '../../db/queries'
+import type { Profile } from '../../db/schema'
 
 const MAX_PLAYERS = 8
 
-export function SetupScreen() {
+export function SetupScreen({ onShowStats }: { onShowStats?: () => void }) {
   const startGame = useMatch((s) => s.startGame)
   const [modeId, setModeId] = useState('x01')
-  const [names, setNames] = useState<string[]>(['Player 1', 'Player 2'])
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [newName, setNewName] = useState('')
   const [startingScore, setStartingScore] = useState(501)
   const [doubleOut, setDoubleOut] = useState(true)
   const [doubleIn, setDoubleIn] = useState(false)
   const [legsToWin, setLegsToWin] = useState(3)
 
+  const profiles = useLiveQuery(listProfiles, [], [] as Profile[])
+
   const mode = GAME_MODES.find((m) => m.id === modeId)!
-  const trimmed = names.map((n) => n.trim()).filter(Boolean)
-  const duplicate = new Set(trimmed).size !== trimmed.length
-  const tooFew = trimmed.length < (modeId === 'killer' ? 2 : 1)
-  const canStart = !duplicate && !tooFew
+  // Selection order is the throwing order, so preserve it rather than the
+  // order profiles happen to be stored in.
+  const selected = selectedIds
+    .map((id) => profiles.find((p) => p.id === id))
+    .filter((p): p is Profile => p !== undefined)
+  const canStart = selected.length >= (modeId === 'killer' ? 2 : 1)
+
+  function toggle(id: string) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((x) => x !== id)
+        : current.length >= MAX_PLAYERS
+          ? current
+          : [...current, id],
+    )
+  }
+
+  async function addPlayer() {
+    const name = newName.trim()
+    if (!name) return
+    // Clear the field before awaiting the write, not after. Clearing
+    // afterwards wipes whatever was typed while the database round-trip was in
+    // flight, which loses the next player's name entirely.
+    setNewName('')
+    const profile = await createProfile(name)
+    setSelectedIds((current) => (current.includes(profile.id) ? current : [...current, profile.id]))
+  }
 
   function start() {
     const config =
       modeId === 'x01'
         ? ({ startingScore, doubleIn, doubleOut, legsToWin, setsToWin: 1 } satisfies X01Config)
         : mode.defaultConfig()
-    startGame(modeId, trimmed, config)
+    startGame(modeId, selected, config)
   }
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 p-5 pb-24">
-      <header className="pt-4">
-        <h1 className="text-4xl font-black tracking-tight text-amber-400">OCHE</h1>
-        <p className="text-sm text-neutral-400">Set the phone up, pick a game, throw.</p>
+      <header className="flex items-end justify-between pt-4">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-amber-400">OCHE</h1>
+          <p className="text-sm text-neutral-400">Set the phone up, pick a game, throw.</p>
+        </div>
+        {onShowStats && (
+          <button
+            type="button"
+            onClick={onShowStats}
+            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-200"
+          >
+            Stats
+          </button>
+        )}
       </header>
 
       <section className="flex flex-col gap-2">
@@ -105,39 +145,69 @@ export function SetupScreen() {
       )}
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-neutral-500">Players</h2>
-        {names.map((name, index) => (
-          <div key={index} className="flex gap-2">
-            <input
-              value={name}
-              onChange={(e) =>
-                setNames((current) => current.map((n, i) => (i === index ? e.target.value : n)))
-              }
-              aria-label={`Player ${index + 1} name`}
-              className="flex-1 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-neutral-100 outline-none focus:border-amber-400"
-            />
-            {names.length > 1 && (
+        <h2 className="text-xs font-bold uppercase tracking-widest text-neutral-500">
+          Players {selected.length > 0 && `· throwing in this order`}
+        </h2>
+
+        {profiles.length === 0 && (
+          <p className="text-sm text-neutral-500">
+            No players yet. Add everyone who is throwing — their stats are kept between games.
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {profiles.map((profile) => {
+            const order = selectedIds.indexOf(profile.id)
+            const isSelected = order !== -1
+            return (
               <button
+                key={profile.id}
                 type="button"
-                aria-label={`Remove player ${index + 1}`}
-                onClick={() => setNames((current) => current.filter((_, i) => i !== index))}
-                className="rounded-xl bg-neutral-800 px-4 text-neutral-400"
+                aria-pressed={isSelected}
+                data-testid={`player-${profile.name}`}
+                onClick={() => toggle(profile.id)}
+                className={`flex items-center gap-2 rounded-full border px-4 py-2.5 font-semibold transition ${
+                  isSelected
+                    ? 'border-transparent text-neutral-950'
+                    : 'border-neutral-700 bg-neutral-900 text-neutral-300'
+                }`}
+                style={isSelected ? { backgroundColor: profile.colour } : undefined}
               >
-                ✕
+                {isSelected && (
+                  <span className="grid size-5 place-items-center rounded-full bg-black/25 text-xs">
+                    {order + 1}
+                  </span>
+                )}
+                {profile.name}
               </button>
-            )}
-          </div>
-        ))}
-        {names.length < MAX_PLAYERS && (
+            )
+          })}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void addPlayer()
+            }}
+            placeholder="Add a player…"
+            aria-label="New player name"
+            className="flex-1 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-neutral-100 outline-none placeholder:text-neutral-600 focus:border-amber-400"
+          />
           <button
             type="button"
-            onClick={() => setNames((current) => [...current, `Player ${current.length + 1}`])}
-            className="rounded-xl border border-dashed border-neutral-700 py-3 text-neutral-400"
+            onClick={() => void addPlayer()}
+            disabled={!newName.trim()}
+            className="rounded-xl bg-neutral-800 px-5 font-semibold text-neutral-200 disabled:opacity-40"
           >
-            + Add player
+            Add
           </button>
+        </div>
+
+        {modeId === 'killer' && selected.length < 2 && (
+          <p className="text-sm text-neutral-500">Killer needs at least two players.</p>
         )}
-        {duplicate && <p className="text-sm text-red-400">Every player needs a different name.</p>}
       </section>
 
       <button

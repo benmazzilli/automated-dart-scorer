@@ -7,6 +7,8 @@ export function ResultScreen() {
   const state = useMatch((s) => s.state)
   const quit = useMatch((s) => s.quit)
   const startGame = useMatch((s) => s.startGame)
+  const profiles = useMatch((s) => s.profiles)
+  const nameOf = useMatch((s) => s.nameOf)
 
   if (!mode || !state) return null
 
@@ -17,7 +19,7 @@ export function ResultScreen() {
       <div className="text-center">
         <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">{mode.name}</p>
         <h1 className="mt-2 text-5xl font-black text-amber-400">
-          {state.winner ? `${state.winner} wins` : 'Draw'}
+          {state.winner ? `${nameOf(state.winner)} wins` : 'Draw'}
         </h1>
         {state.message && <p className="mt-2 text-neutral-400">{state.message}</p>}
       </div>
@@ -31,7 +33,7 @@ export function ResultScreen() {
             }`}
           >
             <span className="w-8 text-center text-lg">{PLACES[index] ?? index + 1}</span>
-            <span className="flex-1 font-semibold text-neutral-100">{playerId}</span>
+            <span className="flex-1 font-semibold text-neutral-100">{nameOf(playerId)}</span>
           </li>
         ))}
       </ol>
@@ -39,7 +41,7 @@ export function ResultScreen() {
       <div className="flex flex-col gap-2">
         <button
           type="button"
-          onClick={() => startGame(mode.id, state.players, undefined)}
+          onClick={() => startGame(mode.id, profiles, undefined)}
           className="rounded-2xl bg-amber-400 py-4 text-lg font-black text-neutral-950"
         >
           Play again

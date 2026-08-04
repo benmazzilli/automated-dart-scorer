@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 /**
  * Not an assertion — this renders each screen to an image so the layout can be
@@ -6,6 +6,11 @@ import { test } from '@playwright/test'
  */
 test('capture screens', async ({ page }) => {
   await page.goto('/')
+  for (const name of ['Ben', 'Dave']) {
+    await page.getByLabel('New player name').fill(name)
+    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByTestId(`player-${name}`)).toBeVisible()
+  }
   await page.screenshot({ path: 'test-results/shots/1-setup.png', fullPage: true })
 
   await page.getByRole('button', { name: 'Start game' }).click()

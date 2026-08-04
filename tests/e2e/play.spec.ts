@@ -14,8 +14,20 @@ async function throwVisit(page: Page, darts: [number | 'MISS', Ring?][]) {
 
 const MAX_LEGS = 21
 
-async function startGame(page: Page, options: { mode?: string; legs?: number } = {}) {
+export async function addPlayers(page: Page, names: string[]) {
+  for (const name of names) {
+    await page.getByLabel('New player name').fill(name)
+    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByTestId(`player-${name}`)).toBeVisible()
+  }
+}
+
+async function startGame(
+  page: Page,
+  options: { mode?: string; legs?: number; players?: string[] } = {},
+) {
   await page.goto('/')
+  await addPlayers(page, options.players ?? ['Player 1', 'Player 2'])
   if (options.mode) await page.getByRole('button', { name: new RegExp(options.mode) }).click()
   if (options.legs !== undefined) {
     for (let i = 0; i < MAX_LEGS; i++) await page.getByRole('button', { name: 'Fewer legs' }).click()

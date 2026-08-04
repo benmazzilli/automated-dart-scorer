@@ -16,6 +16,7 @@ export function PlayScreen() {
   const undoTurn = useMatch((s) => s.undoTurn)
   const quit = useMatch((s) => s.quit)
   const canUndo = useMatch((s) => s.past.length > 0)
+  const nameOf = useMatch((s) => s.nameOf)
 
   const [entry, setEntry] = useState<EntryMode>('keypad')
 
@@ -58,13 +59,13 @@ export function PlayScreen() {
               } ${entryRow.eliminated ? 'opacity-40' : ''}`}
             >
               <div className="min-w-0">
-                <div className="truncate font-semibold text-neutral-100">{entryRow.playerId}</div>
+                <div className="truncate font-semibold text-neutral-100">{nameOf(entryRow.playerId)}</div>
                 {entryRow.secondary && (
                   <div className="truncate text-xs text-neutral-400">{entryRow.secondary}</div>
                 )}
               </div>
               <div
-                data-testid={`score-${entryRow.playerId}`}
+                data-testid={`score-${nameOf(entryRow.playerId)}`}
                 className={`shrink-0 pl-3 text-3xl font-black tabular-nums ${
                   isThrower ? 'text-amber-400' : 'text-neutral-300'
                 }`}
