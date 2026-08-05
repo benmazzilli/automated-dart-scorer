@@ -120,7 +120,10 @@ export function PlayScreen() {
         <div className="rounded-xl bg-neutral-900 px-4 py-3 text-center">
           {target && <div className="text-sm text-neutral-400">{target}</div>}
           {state.message && (
-            <div className="mt-1 text-lg font-black uppercase tracking-wide text-amber-400">
+            <div
+              data-testid="turn-message"
+              className="mt-1 text-lg font-black uppercase tracking-wide text-amber-400"
+            >
               {state.message}
             </div>
           )}

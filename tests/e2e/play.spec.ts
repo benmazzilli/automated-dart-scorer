@@ -107,9 +107,11 @@ test.describe('501', () => {
       [20, 'Treble'],
       [20, 'Treble'],
       [20, 'Double'],
-    ]) // 141 -> 40 exactly? 501-360 = 141; 60+60+40 = 160 -> bust
-    // That visit busts by going below zero, so the score stays at 141.
-    await expect(page.getByText(/BUST/)).toBeVisible()
+    ]) // 501 - 360 = 141 left; 60 + 60 + 40 = 160 goes below zero
+    // That visit busts, so the score stays at 141. Matched on the message line
+    // specifically rather than any text saying BUST — the bust meme overlay
+    // also says it, and whether it is still on screen is a matter of timing.
+    await expect(page.getByTestId('turn-message')).toContainText('BUST')
     await expect(score(page, 'Player 1')).toHaveText('141')
   })
 

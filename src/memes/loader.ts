@@ -1,8 +1,16 @@
 import { DEFAULT_MEMES } from './defaults'
 import type { MemeDefinition } from './triggers'
 
-/** Where user-supplied images and sounds live, relative to the site root. */
-export const MEME_ASSET_BASE = '/memes/'
+/**
+ * Where user-supplied images and sounds live.
+ *
+ * Derived from the app's base path rather than hardcoded to `/memes/`, because
+ * GitHub Pages serves a project site from a subpath. Vite guarantees
+ * `BASE_URL` ends in a slash. Getting this wrong fails silently — `loadMemes`
+ * swallows a failed fetch and falls back to the built-in effects — so a
+ * subpath deploy would just quietly ignore every custom meme.
+ */
+export const MEME_ASSET_BASE = `${import.meta.env.BASE_URL}memes/`
 
 interface MemeConfigFile {
   /** Replace the built-in set entirely rather than adding to it. */

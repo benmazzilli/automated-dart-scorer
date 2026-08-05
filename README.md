@@ -161,17 +161,70 @@ and D3 to leave 429.
 That verifies the geometry and the logic. It cannot verify the thresholds hold
 up under real light — only your board can do that.
 
-## Deploying
+## Testing it on an iPhone
 
-The build output is static, so anything that serves files will do. Camera access
-needs HTTPS.
+**iOS will not give a web page a camera unless the page is on HTTPS.** A dev
+server on your local network is not enough — the camera just silently fails to
+start. So it has to be deployed somewhere, or tunnelled.
 
-```bash
-npm run build     # -> dist/
+### Deployed on GitHub Pages
+
+`.github/workflows/deploy.yml` publishes on every push to `main`. The site lands
+at:
+
+```
+https://benmazzilli.github.io/automated-dart-scorer/
 ```
 
-Cloudflare Pages, Netlify and GitHub Pages all work with no configuration beyond
-build command `npm run build` and output directory `dist`.
+Two repo settings are needed once, and the first deploy fails without them:
+
+1. **Settings → Pages → Source: GitHub Actions.**
+2. **Settings → Environments → `github-pages` → Deployment branches** — add any
+   branch you want to deploy from. This environment only accepts the default
+   branch out of the box, which is the usual reason a first deploy from a
+   feature branch is rejected, and the error is not obvious.
+
+Then, on the phone:
+
+1. Open the URL in **Safari as an ordinary tab first**, not as an installed app.
+   Camera permission behaves better in a tab, and it rules out PWA-specific
+   problems before you add them.
+2. Play a leg on the keypad to check the basics.
+3. Switch to **Camera**, calibrate, and see how it reads.
+4. Once happy, **Share → Add to Home Screen** and run through it again.
+
+### Tuning against a real board
+
+Pages takes a couple of minutes per deploy, which is fine for "does it work at
+all" and miserable for adjusting vision thresholds. For that, run the dev server
+on a laptop and put a tunnel in front of it so the phone gets real HTTPS:
+
+```bash
+npm run dev -- --host          # note the port, usually 5173
+cloudflared tunnel --url http://localhost:5173
+```
+
+Open the `trycloudflare.com` URL it prints on the phone. Now you can edit
+`src/vision/config.ts`, and the change is on your phone as soon as you save.
+Turn on **Debug** in the camera view to see the difference mask the detector is
+actually reacting to. `ngrok http 5173` works the same way.
+
+### Anywhere else
+
+The build output is static, so any host will do — Cloudflare Pages, Netlify and
+Vercel all need nothing beyond build command `npm run build` and output
+directory `dist`, and they serve from a root domain so the base path below does
+not apply.
+
+```bash
+npm run build                                  # -> dist/, served from /
+VITE_BASE=/automated-dart-scorer/ npm run build # -> dist/, served from a subpath
+```
+
+`VITE_BASE` exists because a GitHub Pages project site is served from
+`/<repo>/` rather than a domain root. It feeds the asset paths, the service
+worker scope, the manifest `start_url`, and the folder the meme config is
+fetched from. It defaults to `/`, so dev and the test suite are unaffected.
 
 ## Known limits
 

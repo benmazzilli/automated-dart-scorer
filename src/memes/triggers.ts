@@ -46,7 +46,7 @@ export interface MemeDefinition {
   effect: EffectStyle
   /** Accent colour for the text and flash. */
   colour?: string
-  /** Optional user asset, resolved relative to `/memes/`. */
+  /** Optional user asset, resolved relative to the `memes/` folder. */
   image?: string
   sound?: string
   durationMs?: number
