@@ -1,0 +1,77 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      # Testing on a phone should not have to wait for a merge. Remove this
+      # once the pull request lands.
+      - claude/repo-review-rtou75
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. `cancel-in-progress: false` so a queued build finishes
+# rather than being dropped halfway through publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Requires Pages to already be switched on for the repository:
+      # Settings -> Pages -> Source: GitHub Actions.
+      #
+      # This step used to pass `enablement: true` to turn it on automatically,
+      # but the workflow token is not permitted to create a Pages site on a
+      # user-owned repository — it fails with "Resource not accessible by
+      # integration". Asking it to try only produced a second, more confusing
+      # error on top of the real one.
+      - uses: actions/configure-pages@v5
+
+      - name: Build
+        # A project site is served from /<repo>/, so assets, the service worker
+        # scope and the meme folder all have to be built against that prefix.
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: npx vite build
+
+      - name: Fail if the build did not pick up the base path
+        # A base path silently reverting to the root produces a page that 404s
+        # every asset once deployed, which is a slow thing to diagnose from a
+        # phone. Cheaper to catch it here.
+        run: |
+          if ! grep -q '/${{ github.event.repository.name }}/assets/' dist/index.html; then
+            echo "dist/index.html does not reference the subpath - VITE_BASE was not applied"
+            grep -o 'src="[^"]*"' dist/index.html || true
+            exit 1
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

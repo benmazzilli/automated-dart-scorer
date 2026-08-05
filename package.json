@@ -1,0 +1,40 @@
+{
+  "name": "automated-dart-scorer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Mini darts app for iPhone: camera auto-scoring, classic and rogue game modes, local profiles and stats.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.3",
+    "dexie": "^4.2.0",
+    "dexie-react-hooks": "^4.2.0",
+    "motion": "^12.23.12",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "jsdom": "^27.0.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vite-plugin-pwa": "^1.0.3",
+    "vitest": "^3.2.4"
+  }
+}
