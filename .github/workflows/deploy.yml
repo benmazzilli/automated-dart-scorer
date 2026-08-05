@@ -34,12 +34,15 @@ jobs:
 
       - run: npm ci
 
+      # Requires Pages to already be switched on for the repository:
+      # Settings -> Pages -> Source: GitHub Actions.
+      #
+      # This step used to pass `enablement: true` to turn it on automatically,
+      # but the workflow token is not permitted to create a Pages site on a
+      # user-owned repository — it fails with "Resource not accessible by
+      # integration". Asking it to try only produced a second, more confusing
+      # error on top of the real one.
       - uses: actions/configure-pages@v5
-        with:
-          # Turns Pages on via the API if it is not already enabled. Not
-          # reliable across every account type, so Settings -> Pages ->
-          # Source: GitHub Actions is the fallback.
-          enablement: true
 
       - name: Build
         # A project site is served from /<repo>/, so assets, the service worker
